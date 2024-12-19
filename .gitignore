@@ -1,8 +1,11 @@
 # Node.js
 node_modules/
 npm-debug.log
-.env
 .DS_Store
+
+# environment 
+.env
+.env.test
 
 # Logs
 *.log
@@ -11,9 +14,9 @@ npm-debug.log
 .vscode/
 .idea/
 
-# Arquivos de build
+# Database
+db/*.db
+
+#build
 dist/
 build/
-db/app.db
-
-.env.test
