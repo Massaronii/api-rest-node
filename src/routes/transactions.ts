@@ -7,7 +7,7 @@ import { checkSessionIdExists } from '../middlewares/check-session-id-exists'
 // cookies <--> formas da gente manter contexto entre requisições
 
 export function transactionsRoutes(app: FastifyInstance) {
-  app.addHook('preHandler', async (request, reply) => {
+  app.addHook('preHandler', async (request) => {
     console.log(`[${request.method}] ${request.url}`)
   })
 
@@ -19,8 +19,10 @@ export function transactionsRoutes(app: FastifyInstance) {
     async (request) => {
       const { sessionId } = request.cookies
 
+      console.log(sessionId)
+
       const transactions = await knex('transactions')
-        .where('sessionId', sessionId)
+        .where('session_id', sessionId)
         .select('*')
 
       return {
@@ -44,10 +46,8 @@ export function transactionsRoutes(app: FastifyInstance) {
       const { sessionId } = request.cookies
 
       const transactions = await knex('transactions')
-        .where({
-          sessionId,
-          id,
-        })
+        .where('session_id', sessionId)
+        .where('id', id)
         .first()
 
       return { transactions }
@@ -60,10 +60,10 @@ export function transactionsRoutes(app: FastifyInstance) {
       preHandler: [checkSessionIdExists],
     },
     async (request) => {
-      const { session_id } = request.cookies
+      const { sessionId } = request.cookies
 
       const summary = await knex('transactions')
-        .where('session_id', session_id)
+        .where('session_id', sessionId)
         .sum('amount', { as: 'amount' })
         .first()
 
@@ -71,19 +71,15 @@ export function transactionsRoutes(app: FastifyInstance) {
     },
   )
 
-  app.post(
-    '/',
-    {
-      preHandler: [checkSessionIdExists],
-    },
-    async (request, reply) => {
-      const createTransactionsBodySchema = z.object({
+  app.post('/', async (request, reply) => {
+    try {
+      const createTransactionBodySchema = z.object({
         title: z.string(),
         amount: z.number(),
         type: z.enum(['credit', 'debit']),
       })
 
-      const { title, amount, type } = createTransactionsBodySchema.parse(
+      const { title, amount, type } = createTransactionBodySchema.parse(
         request.body,
       )
 
@@ -94,7 +90,7 @@ export function transactionsRoutes(app: FastifyInstance) {
 
         reply.setCookie('sessionId', sessionId, {
           path: '/',
-          maxAge: 60 * 60 * 24 * 7, // 7days
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 7 dias
         })
       }
 
@@ -106,6 +102,9 @@ export function transactionsRoutes(app: FastifyInstance) {
       })
 
       return reply.status(201).send()
-    },
-  )
+    } catch (error) {
+      console.error('Error:', error)
+      return reply.status(400).send({ error: 'Invalid request data' })
+    }
+  })
 }
