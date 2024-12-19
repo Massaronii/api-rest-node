@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 
-export function checkSessionIdExists(
+export async function checkSessionIdExists(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
@@ -8,7 +8,7 @@ export function checkSessionIdExists(
 
   if (!sessionId) {
     return reply.status(401).send({
-      error: 'Unauthorized',
+      error: 'Unauthorized.',
     })
   }
 }
