@@ -1,10 +1,12 @@
 import { app } from './app'
 import { env } from './env'
 
+const portRender = env.PORT || 4000
+
 app
   .listen({
-    port: env.PORT,
+    port: portRender,
   })
   .then(() => {
-    console.log('Server is running on port 3333')
+    console.log(`Server is running on port ${portRender}`)
   })
